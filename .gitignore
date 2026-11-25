@@ -8,10 +8,8 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Models, datasets, and large binary/data artifacts
+# Datasets and duplicate/sample data artifacts
 *.pickle
-*.p
-*.task
 hand_gesture_samplae/
 Hand_Gesture/data/
 
