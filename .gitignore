@@ -1,0 +1,40 @@
+# Virtual environments
+venv/
+.venv/
+
+# Python cache & compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Models, datasets, and large binary/data artifacts
+*.pickle
+*.p
+*.task
+hand_gesture_samplae/
+Hand_Gesture/data/
+
+# Logs & temporary files
+logs/
+*.log
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# IDE & OS cache files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Sensitive credentials & environment files
+.env
+.env.*
+*.pem
+*.key
+credentials*.json

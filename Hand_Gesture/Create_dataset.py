@@ -1,8 +1,30 @@
+import sys
 import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.dirname(script_dir)
+for p in (script_dir, root_dir):
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+# Auto re-exec using local venv if system python is missing dependencies
+venv_dir = os.path.join(root_dir, "venv")
+venv_python = os.path.join(venv_dir, "bin", "python")
+if os.path.exists(venv_python) and sys.prefix != venv_dir:
+    try:
+        import cv2
+        import mediapipe
+    except ImportError:
+        os.execv(venv_python, [venv_python] + sys.argv)
+
+try:
+    import mp_compat
+except Exception:
+    from . import mp_compat
+
 import mediapipe as mp
 import pickle
 import cv2
-
 
 mp_hands = mp.solutions.hands
 mp_draw = mp.solutions.drawing_utils
@@ -10,41 +32,57 @@ mp_drawing_style = mp.solutions.drawing_styles
 
 hands = mp_hands.Hands(static_image_mode=True, min_detection_confidence=0.4)
 
-DATA_DIR = '../hand_gesture_samplae/data'
+possible_data_dirs = [
+    os.path.join(script_dir, 'data'),
+    os.path.join(script_dir, '..', 'data'),
+    os.path.join(script_dir, '..', 'hand_gesture_samplae', 'data'),
+    os.path.join(script_dir, 'hand_gesture_samplae', 'data'),
+]
+DATA_DIR = next((d for d in possible_data_dirs if os.path.exists(d)), os.path.join(script_dir, 'data'))
 
 data = []
 labels = []
 
+if not os.path.exists(DATA_DIR) or not os.listdir(DATA_DIR):
+    print(f"Data directory '{DATA_DIR}' does not exist or is empty. Run Collect_Data.py first.")
+    sys.exit(0)
+
 for dir_ in os.listdir(DATA_DIR):
-    for image_path in os.listdir(os.path.join(DATA_DIR, dir_)):
-        temp_data = []
-        x_ = []
-        y_ = []
+    dir_path = os.path.join(DATA_DIR, dir_)
+    if not os.path.isdir(dir_path):
+        continue
 
-        img = cv2.imread(os.path.join(DATA_DIR, dir_, image_path))
+    for image_name in os.listdir(dir_path):
+        image_path = os.path.join(dir_path, image_name)
+        img = cv2.imread(image_path)
+        if img is None:
+            continue
+
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
         result = hands.process(img_rgb)
 
         if result.multi_hand_landmarks:
-            for hand_landmark in result.multi_hand_landmarks:
-                for i in range(len(hand_landmark.landmark)):
-                    x = hand_landmark.landmark[i].x
-                    y = hand_landmark.landmark[i].y
+            hand_landmark = result.multi_hand_landmarks[0]
+            x_ = [lm.x for lm in hand_landmark.landmark]
+            y_ = [lm.y for lm in hand_landmark.landmark]
+            min_x = min(x_)
+            min_y = min(y_)
 
-                    x_.append(x)
-                    y_.append(y)
+            temp_data = []
+            for lm in hand_landmark.landmark:
+                temp_data.append(lm.x - min_x)
+                temp_data.append(lm.y - min_y)
 
-                for i in range(len(hand_landmark.landmark)):
-                    x = hand_landmark.landmark[i].x
-                    y = hand_landmark.landmark[i].y
+            if len(temp_data) == 42:
+                data.append(temp_data)
+                labels.append(dir_)
 
-                    temp_data.append(x - min(x_))
-                    temp_data.append(y - min(y_))
+if len(data) == 0:
+    print(f"No valid hand gesture samples found in '{DATA_DIR}'.")
+    print("Please run Collect_Data.py first to capture gesture images from your webcam.")
+    sys.exit(0)
 
-            data.append(temp_data)
-            labels.append(dir_)
-
-file = open('../hand_gesture_samplae/data.pickle', 'wb')
-pickle.dump({'data': data, 'labels': labels}, file)
-file.close()
+output_path = os.path.join(script_dir, 'data.pickle')
+with open(output_path, 'wb') as file:
+    pickle.dump({'data': data, 'labels': labels}, file)
+print(f"Dataset successfully created ({len(data)} samples) and saved to {output_path}")

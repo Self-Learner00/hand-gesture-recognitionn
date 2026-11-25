@@ -12,9 +12,9 @@ This project allows you to collect gesture images, process and extract hand land
 ## 📚 Features
 - Real-time gesture recognition using webcam
 - Single and dual hand detection
-- 9 gesture classes (e.g., Yes, No, Thank you, Love, OK, Peace)
+- 27 static gesture classes, including counting poses, common signals, and ASL handshapes
 - MediaPipe Hands for robust landmark detection
-- Trained using RandomForestClassifier for high accuracy
+- RandomForestClassifier trained from collected hand landmark data
 - Modular code structure (easy to modify or extend)
 
 ---
@@ -23,10 +23,11 @@ This project allows you to collect gesture images, process and extract hand land
 ```bash
 Hand_Gesture/
 │
-├── Collection_Data.py     # Script to collect gesture images using webcam
-├── Creat_data.py          # Extract hand landmarks from collected images
-├── ML_model.py            # Train ML model using extracted data
+├── Collect_Data.py        # Collect gesture images using webcam
+├── Create_dataset.py      # Extract hand landmarks from collected images
+├── ML_Model.py            # Train the Random Forest model
 ├── main.py                # Real-time hand gesture recognition script
+├── gestures.py            # Shared gesture labels and pose prompts
 ├── data/                  # Contains gesture images organized by class
 ├── data.pickle            # Processed data (features + labels)
 ├── model.p                # Trained Random Forest model
@@ -46,44 +47,66 @@ pip install opencv-python mediapipe scikit-learn numpy
 ### 1. Data Collection:
 Run the following command and show each gesture when prompted:
 ```bash
-python Collection_Data.py    # After running this file "data/ " file will be created on your package
+python Hand_Gesture/Collect_Data.py    # Collects 300 samples for each of the 27 gesture classes
 ```
 
 ### 2. Extract Landmark Data:
 ```bash
-python Creat_data.py      # After running this file "data.pickle" this file will be created
+python Hand_Gesture/Create_dataset.py      # Creates Hand_Gesture/data.pickle
 ```
 
 ### 3. Train ML Model:
 ```bash
-python ML_model.py      #  After running this file "model.p" will be created
+python Hand_Gesture/ML_Model.py      # Trains all collected classes and creates Hand_Gesture/model.p
 ```
 
 ### 4. Real-Time Prediction:
 ```bash
-python main.py
+python Hand_Gesture/main.py
 ```
 Press **'h'** to close the window.
 
 ---
 
-## 🔎 Gestures Recognized
-| Label | Meaning        |
-|-------|----------------|
-| 0     | No             |
-| 1     | Yes            |
-| 2     | Thank you      |
-| 3     | Greetings      |
-| 4     | Hello          |
-| 5     | Love           |
-| 6     | OK             |
-| 7     | Peace          |
-| 8     | Super          |
+## 🔎 The 27 Gesture Classes
+
+Collect gestures in the order shown. The collector displays the class name and pose prompt before capturing each set.
+
+| ID | Gesture | Pose |
+|----|---------|------|
+| 0 | No / Fist | Closed fist |
+| 1 | Yes / Thumbs Up | Thumb up, other fingers curled |
+| 2 | Thank you | Four fingers straight and close, thumb tucked |
+| 3 | Greetings | Open palm with fingers together |
+| 4 | Hello | Open palm with fingers spread |
+| 5 | I Love You (ILY) | Thumb, index, and pinky extended |
+| 6 | OK | Thumb and index touch; other fingers extended |
+| 7 | Peace | Index and middle fingers extended |
+| 8 | Rock On | Index and pinky extended |
+| 9 | Point | Index finger extended |
+| 10 | Middle Finger | Middle finger extended |
+| 11 | ASL I | Pinky extended |
+| 12 | Crossed Fingers / Good Luck | Index and middle crossed, with thumb extended |
+| 13 | Count Three | Index, middle, and ring fingers extended |
+| 14 | Count Four | Four fingers spread, thumb tucked |
+| 15 | Call Me / Shaka | Thumb and pinky extended |
+| 16 | L Shape | Thumb and index extended at a right angle |
+| 17 | Thumbs Down | Thumb down, other fingers curled |
+| 18 | Pinch | Thumb and index touch; other fingers curled |
+| 19 | Count Three (Thumb) | Thumb, index, and middle extended |
+| 20 | Count Four (Thumb) | Thumb, index, middle, and ring extended |
+| 21 | Vulcan Salute | Index & middle paired, ring & pinky paired, separated in a V |
+| 22 | Together / ASL U | Index and middle extended straight and touching together |
+| 23 | Hitchhiker | Closed fist with thumb extended horizontally sideways |
+| 24 | Pinched Fingers | All five fingertips touching together pointing upwards (🤌 Che Vuoi) |
+| 25 | I Love You (Half Heart / C) | Fingers and thumb curved into an open C / half-heart shape (ILY) |
+| 26 | ASL D | Index pointing straight up; thumb touching curled middle fingertip |
+
+The live recognizer classifies static hand poses; it does not analyze motion between frames. Retrain the model after collecting all 27 classes to use the learned classifier for the full set.
 
 ---
 
 ## 💪 Future Improvements
-- Add more gestures & classes
 - Improve model accuracy using deep learning (e.g., CNN)
 - Use LSTM for sequence-based gesture recognition
 - Export as web or mobile app
@@ -99,4 +122,3 @@ Press **'h'** to close the window.
 
 ## 📅 License
 This project is open-source and free to use for learning, research, and personal projects. No formal license is attached—just give credit if you find it helpful!
-
